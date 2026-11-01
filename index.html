@@ -831,16 +831,34 @@ async function runExport(btn){
   finally{btn.disabled=false;btn.textContent=label;}
 }
 async function doPrint(scope){
-  // Both Print and PDF use the same single-page, fitted PDF layout.
-  // Avoid window.print() on the long dashboard, which can create multiple pages.
-  if(!DL){toast("Downloads aren't available in this view");return;}
+  // Open a print-preview page on the click itself (before async capture).
+  // Its entire dashboard or calculator is fitted on a single landscape sheet.
+  const preview=window.open("","_blank");
+  if(!preview){toast("Please allow pop-ups to open the one-page print preview.");return;}
+  preview.document.write('<!doctype html><html><head><title>Preparing print preview</title></head><body style="font:14px Arial,sans-serif;padding:24px">Preparing one-page print preview…</body></html>');
+  preview.document.close();
   try{
-    const blob=await exportPDF(scope,true);
-    await DL.save({filename:`${fileBase(scope)}-print.pdf`,data:blob});
-    toast("One-page print-ready PDF saved. Open it to print.");
+    const canvas=await snap(scope==="kpi"?"#v-kpi .dash":"#v-roi");
+    const img=canvas.toDataURL("image/png");
+    const heading=scope==="kpi"?"AI Performance Dashboard":"AI ROI Calculator";
+    preview.document.open();
+    preview.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${heading} — Print</title>
+<style>
+@page{size:letter landscape;margin:0.3in}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:white;color:#151515;font-family:Arial,sans-serif}
+.print-sheet{width:100%;height:7.9in;display:flex;flex-direction:column;align-items:center;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
+h1{font-size:17px;margin:0 0 9px;align-self:flex-start}
+img{display:block;max-width:100%;max-height:7.05in;width:auto;height:auto;object-fit:contain;flex-shrink:1}
+footer{margin-top:auto;align-self:flex-start;font-size:9px;color:#666}
+@media screen{body{padding:20px;background:#eee}.print-sheet{width:10.4in;margin:auto;background:white;padding:0.1in;box-shadow:0 2px 16px #bbb}}
+@media print{html,body{width:100%;height:100%;overflow:hidden}.print-sheet{height:7.9in}}
+</style></head><body><div class="print-sheet"><h1>${heading}</h1><img id="print-image" alt="${heading}" src="${img}"><footer>Designed by Weiwei Hu · © 2026 Weiwei Hu. All rights reserved.</footer></div>
+<script>document.getElementById("print-image").onload=function(){setTimeout(function(){window.focus();window.print()},150)};<\/script></body></html>`);
+    preview.document.close();
   }catch(err){
-    const c=err&&err.code;
-    toast(c==="declined"?"Print cancelled":"Couldn't prepare the one-page print PDF");
+    preview.document.body.textContent="Couldn't prepare print preview. Please try again.";
+    toast("Couldn't prepare print preview");
   }
 }
 function updateMail(){
