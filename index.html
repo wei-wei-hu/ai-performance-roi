@@ -831,10 +831,9 @@ async function runExport(btn){
   finally{btn.disabled=false;btn.textContent=label;}
 }
 async function doPrint(scope){
-  // Open a print-preview page on the click itself (before async capture).
-  // Its entire dashboard or calculator is fitted on a single landscape sheet.
+  // Open a one-page on-screen preview; only the user's second click opens the native print dialog.
   const preview=window.open("","_blank");
-  if(!preview){toast("Please allow pop-ups to open the one-page print preview.");return;}
+  if(!preview){toast("Please allow pop-ups for the print preview.");return;}
   preview.document.write('<!doctype html><html><head><title>Preparing print preview</title></head><body style="font:14px Arial,sans-serif;padding:24px">Preparing one-page print preview…</body></html>');
   preview.document.close();
   try{
@@ -842,19 +841,20 @@ async function doPrint(scope){
     const img=canvas.toDataURL("image/png");
     const heading=scope==="kpi"?"AI Performance Dashboard":"AI ROI Calculator";
     preview.document.open();
-    preview.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${heading} — Print</title>
+    preview.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${heading} — Print Preview</title>
 <style>
 @page{size:letter landscape;margin:0.3in}
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:white;color:#151515;font-family:Arial,sans-serif}
-.print-sheet{width:100%;height:7.9in;display:flex;flex-direction:column;align-items:center;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
-h1{font-size:17px;margin:0 0 9px;align-self:flex-start}
-img{display:block;max-width:100%;max-height:7.05in;width:auto;height:auto;object-fit:contain;flex-shrink:1}
+html,body{margin:0;background:#eee;color:#151515;font-family:Arial,sans-serif}
+.toolbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;z-index:2}
+.toolbar button{background:#151515;color:#fff;border:0;border-radius:20px;padding:10px 22px;font:600 14px Arial;cursor:pointer}
+.sheet{width:10.4in;height:7.9in;margin:20px auto;background:white;padding:0.1in;display:flex;flex-direction:column;align-items:center;overflow:hidden;box-shadow:0 2px 16px #bbb;break-inside:avoid;page-break-inside:avoid}
+h1{font-size:17px;margin:0 0 8px;align-self:flex-start}
+.sheet img{display:block;max-width:100%;max-height:6.9in;width:auto;height:auto;object-fit:contain}
 footer{margin-top:auto;align-self:flex-start;font-size:9px;color:#666}
-@media screen{body{padding:20px;background:#eee}.print-sheet{width:10.4in;margin:auto;background:white;padding:0.1in;box-shadow:0 2px 16px #bbb}}
-@media print{html,body{width:100%;height:100%;overflow:hidden}.print-sheet{height:7.9in}}
-</style></head><body><div class="print-sheet"><h1>${heading}</h1><img id="print-image" alt="${heading}" src="${img}"><footer>Designed by Weiwei Hu · © 2026 Weiwei Hu. All rights reserved.</footer></div>
-<script>document.getElementById("print-image").onload=function(){setTimeout(function(){window.focus();window.print()},150)};<\/script></body></html>`);
+@media print{html,body{background:white;width:100%;height:100%;overflow:hidden}.toolbar{display:none!important}.sheet{width:100%;height:7.9in;margin:0;padding:0;box-shadow:none}}
+</style></head><body><div class="toolbar"><span>One-page print preview · Letter landscape</span><button type="button" onclick="window.print()">Print…</button></div>
+<div class="sheet"><h1>${heading}</h1><img alt="${heading}" src="${img}"><footer>Designed by Weiwei Hu · © 2026 Weiwei Hu. All rights reserved.</footer></div></body></html>`);
     preview.document.close();
   }catch(err){
     preview.document.body.textContent="Couldn't prepare print preview. Please try again.";
