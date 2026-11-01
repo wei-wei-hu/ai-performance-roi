@@ -729,7 +729,7 @@ function renderKDash(){
   const P=model(S),planEmp=Math.max(0,+S.emp||0);
   K.adoptT=Math.round(Math.min(1,planEmp/Math.max(1,+K.elig||0))*100);K.roiT=Math.round(P.roi*100);
   const r=kcalc(),[vt,vcol]=kverdict(r),n=k=>Math.max(0,+K[k]||0);
-  $("#kdsub").textContent=`${K.period||"Current period"} · actuals against the plan in the AI ROI Calculator · Mockup with randomized illustrative data.`;
+  $("#kdsub").textContent=`${K.period||"Current period"} · Mockup with randomized illustrative data.`;
   const ofT=(a,t)=>t>0?a/t:0;
   const pTag=x=>{const pc=Math.round(x*100),c=x>=1?"p-ok":x>=.8?"p-mid":"p-bad";return `<span class="pill ${c}">${pc}% of target</span>`;};
   const opsProg=r.ops.reduce((t,o)=>t+Math.min(1,o.prog),0)/Math.max(1,r.ops.length);
