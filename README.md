@@ -1,6 +1,6 @@
 # AI Performance and ROI
 
-**Live tool:** https://wei-wei-hu.github.io/ai-performance-roi/
+**Mockup:** https://wei-wei-hu.github.io/ai-performance-roi/
 
 Two executive tools in one page, built on a three-level framework for measuring AI:
 AI adoption and usage → AI operational performance → AI business value.
