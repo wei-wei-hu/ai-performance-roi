@@ -808,7 +808,7 @@ async function snap(sel){
   finally{document.body.classList.remove("capturing");}
 }
 function fileBase(scope){return scope==="kpi"?"AI-Performance-Dashboard":"AI-ROI-Calculator";}
-function titleOf(scope){if(scope==="kpi")return "AI Performance Dashboard"+(K.period?" · "+K.period:"");const [vt]=verdict(model(S));return "AI ROI Calculator · "+vt;}
+function titleOf(scope){if(scope==="kpi")return "AI Performance Dashboard";const [vt]=verdict(model(S));return "AI ROI Calculator · "+vt;}
 const CREDIT="Designed by Weiwei Hu · © 2026 Weiwei Hu. All rights reserved.";
 function fit(cw,ch,bw,bh){const r=Math.min(bw/cw,bh/ch);return {w:cw*r,h:ch*r};}
 async function exportPDF(scope,auto){
