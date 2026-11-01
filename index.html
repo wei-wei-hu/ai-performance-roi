@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="AI Performance Dashboard and AI ROI Calculator: track AI adoption, operational performance and business value against plan. Designed by Weiwei Hu.">
+<meta name="author" content="Weiwei Hu">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Performance and ROI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: an app frame on a cream canvas. Black sidebar for navigation; main area holds a pastel overview (ring + stat cards + assistant verdict + cash bars), then tagged input cards, a filterable value table, and progress-bar rows for the assumptions that matter most. Single light theme by design. */
+:root{
+  --canvas:#ffffff;
+  --frame:#ffffff;
+  --tile:#f4f4f2;
+  --tile-2:#e7e7e3;
+  --ink:#151515;
+  --muted:#666662;
+  --line:#e5e5e1;
+  --pink:#efb9de; --pink-deep:#e08cc6;
+  --blue:#b8c7ef; --blue-deep:#7e98dc;
+  --yellow:#f2dc72; --yellow-deep:#d9bb2c;
+  --olive:#acb86c; --olive-deep:#7d8a3d;
+  --lilac:#cfc3ee;
+  --green-pill:#9fd27a;
+  --font:"Manrope", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--ink);font:14px/1.5 var(--font)}
+h1,h2,h3{margin:0;font-weight:500;letter-spacing:-.02em;text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(26px,3.2vw,36px)}
+h2{font-size:20px}
+h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
+p{margin:0}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.shell{max-width:1360px;margin:24px auto;padding:0 16px}
+.frame{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;background:var(--frame);border:1.5px solid #3a3631;border-radius:22px;padding:14px;min-height:calc(100vh - 48px)}
+@media (max-width:900px){.frame{grid-template-columns:1fr}}
+
+/* sidebar */
+.side{background:#121212;color:#e9e4da;border-radius:16px;padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:14px;align-self:start;height:calc(100vh - 76px);min-height:520px}
+.brand{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;line-height:1.15;font-size:20px;font-weight:600;letter-spacing:-.03em;padding:0 6px 18px}
+.brand i{flex:none;margin-top:6px;width:12px;height:12px;border-radius:50%;background:var(--pink-deep);display:block;box-shadow:0 0 0 3px #121212,0 0 0 4px #3b3b3b}
+.side .sect{font-size:11px;color:#8e877b;padding:12px 8px 6px}
+.nav{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;color:#e9e4da;text-decoration:none;font-size:13px;cursor:pointer;background:none;border:0;text-align:left;width:100%;position:relative}
+.nav svg{width:16px;height:16px;flex:none;stroke:currentColor}
+.nav:hover{background:#1f1f1f}
+.nav.on{color:var(--pink)}
+.nav.on::before{content:"";position:absolute;left:-2px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--pink)}
+.side .grow{flex:1}
+.mainbar{display:flex;justify-content:flex-end;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.mb-brand{display:flex;align-items:baseline;gap:8px}
+.pagetoggle{display:inline-grid;grid-template-columns:1fr 1fr;background:var(--ink);border-radius:999px;padding:4px;margin-right:auto}
+.pagetoggle a{text-align:center;color:#cfc8bb;text-decoration:none;font-size:13px;font-weight:700;padding:8px 16px;border-radius:999px;white-space:nowrap}
+.pagetoggle a.on{background:#fff;color:var(--ink)}
+.pagetoggle a:not(.on):hover{color:#fff}
+@media (max-width:640px){.pagetoggle{margin-right:0;width:100%}.pagetoggle a{flex:1;text-align:center;padding:8px 8px}}
+.mb-brand b{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.mb-brand span{font-size:12.5px;color:var(--muted)}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.lpill{display:inline-flex;align-items:center;border:1.5px solid var(--ink);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:700;color:var(--ink);text-decoration:none}
+.lpill:hover{background:var(--ink);color:#fff}
+.legal{margin-top:12px;padding-top:16px;border-top:1px solid var(--line);display:grid;gap:6px;font-size:11.5px;color:var(--muted);max-width:none}
+.legal b{color:var(--ink)}
+@media (min-width:1100px){.legal p{white-space:nowrap}}
+.exports{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.exports .lpill{background:none;cursor:pointer;font-family:inherit}
+.exports .lpill[disabled]{opacity:.5;cursor:wait}
+.exports .dl.hidden{display:none}
+@media print{.mainbar,.exports,.legal p:not(:first-child),.toast{display:none!important}.subhead .search{display:none}.frame{border:0;padding:0}body{background:#fff}}
+body.capturing .k .dot,body.capturing .exports,body.capturing .mainbar,body.capturing .legal{visibility:hidden}
+.side .sect:first-of-type{padding-top:4px}
+.brand{padding-bottom:4px!important;font-size:24px!important}
+.byline{margin:0 6px 14px;font-size:12px;color:#a8a196}
+.byline a{color:var(--pink);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.byline a:hover{color:#fff}
+@media (max-width:900px){.byline{margin:0 10px 0 0}}
+.credit{display:grid;gap:2px;margin:4px 0 0;padding:12px;border-radius:12px;background:#1f1f1f;color:#cfc8bb;text-decoration:none;font-size:11.5px;line-height:1.35}
+.credit b{color:#fff;font-size:13.5px;font-weight:700}
+.credit span{color:var(--pink);font-weight:700;font-size:11.5px}
+.credit:hover{background:#2a2a2a}
+@media (max-width:900px){.credit{margin:0 0 0 auto;padding:7px 12px;display:flex;gap:6px;align-items:center}}
+.side .foot{font-size:11px;color:#8e877b;padding:8px;line-height:1.45}
+@media (max-width:900px){
+  .side{position:static;height:auto;min-height:0;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
+  .brand{padding:0 10px 0 4px}.side .sect,.side .grow,.side .foot{display:none}
+  .nav{width:auto;padding:7px 10px}.nav.on::before{display:none}
+}
+
+/* main */
+main{display:grid;gap:22px;padding:6px 6px 24px;min-width:0}
+.topbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.searchwrap{display:flex;align-items:center;gap:10px;flex:1;min-width:280px}
+.lens{width:30px;height:30px;border-radius:50%;background:var(--pink);display:grid;place-items:center;flex:none}
+.lens svg{width:15px;height:15px;stroke:var(--ink)}
+.search{flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid #d4d4cf;border-radius:999px;padding:5px 6px 5px 16px;background:var(--frame);flex-wrap:wrap}
+.search .lbl{font-size:12px;color:var(--muted);margin-right:auto}
+.search .in{font-size:12px;color:var(--muted)}
+.chip{border:1.5px dashed #c2c2bc;background:none;border-radius:999px;padding:3px 12px;font-size:11.5px;font-weight:600;cursor:pointer;color:#3f3f3c}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);border-style:solid;color:#fff}
+.icons{display:flex;gap:6px}
+.icon-btn{width:34px;height:34px;border-radius:50%;background:var(--ink);border:0;display:grid;place-items:center;cursor:pointer}
+.icon-btn svg{width:16px;height:16px;stroke:#fff}
+.hello{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.hello p{color:var(--muted);max-width:70ch;margin-top:6px;font-size:13.5px}
+.pillbtn{border:0;background:var(--ink);color:#fff;border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.pillbtn.light{background:none;color:var(--ink);border:1.5px solid var(--ink)}
+.pillbtn svg{width:14px;height:14px;stroke:currentColor}
+
+/* overview */
+.overview{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);gap:22px}
+@media (max-width:1100px){.overview{grid-template-columns:1fr}}
+.ringcard{display:grid;gap:12px;align-content:start}
+.ringwrap{position:relative;width:100%;max-width:300px;margin:0 auto;aspect-ratio:1}
+.ringwrap svg{width:100%;height:100%;display:block}
+.ringcenter{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none}
+.ringcenter b{font-size:clamp(34px,4vw,46px);font-weight:500;letter-spacing:-.04em;display:block;line-height:1}
+.ringcenter span{font-size:12px;color:var(--muted);display:block;margin-top:6px}
+.ringlegend{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ringlegend .keys{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.ringlegend .keys span{display:flex;align-items:center;gap:5px}
+.ringlegend .keys i{width:9px;height:9px;border-radius:50%;display:block}
+.toggle{display:inline-flex;background:var(--ink);border-radius:999px;padding:3px}
+.toggle button{border:0;background:none;color:#cfc8bb;font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:#fff;color:var(--ink)}
+.stat{border-radius:14px;padding:14px 16px;display:grid;gap:2px;position:relative;overflow:hidden}
+.stat .k{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600}
+.stat .k .dot{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.55);display:grid;place-items:center}
+.stat .k svg{width:12px;height:12px;stroke:var(--ink)}
+.stat .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.stat .v{font-size:26px;font-weight:500;letter-spacing:-.03em}
+.stat .d{font-size:11px;font-weight:700;background:rgba(255,255,255,.6);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.stat .c{font-size:10.5px;color:rgba(21,21,21,.6)}
+.s-pink{background:var(--pink)}.s-blue{background:var(--blue)}.s-yellow{background:var(--yellow)}.s-olive{background:var(--olive)}
+
+.right{display:grid;gap:18px;align-content:start}
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px}
+@media (max-width:760px){.duo{grid-template-columns:1fr}}
+.assistant{background:var(--ink);color:#fff;border-radius:18px;padding:18px;display:grid;gap:10px;align-content:start;position:relative}
+.assistant .t{font-size:13px;font-weight:600;text-align:center;color:#e9e4da}
+.bubble{background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.45}
+.bubble.big{font-size:20px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.bubble.big i{width:12px;height:12px;border-radius:50%;display:block;flex:none}
+.assistant .who{display:flex;gap:8px;align-items:flex-end}
+.assistant .av{width:26px;height:26px;border-radius:50%;background:var(--pink);color:var(--ink);font-size:12px;font-weight:800;display:grid;place-items:center;flex:none}
+.assistant .go{background:var(--pink);color:var(--ink);border:0;border-radius:999px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;margin-top:4px}
+.minis{display:grid;gap:10px}
+.mini{background:var(--tile);border-radius:12px;padding:11px 13px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center}
+.mini .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+.mini .ic svg{width:15px;height:15px;stroke:var(--ink)}
+.mini .k{font-size:12.5px;font-weight:700}
+.mini .s{font-size:11px;color:var(--muted)}
+.vpill{border-radius:8px;padding:4px 9px;font-size:13px;font-weight:700;white-space:nowrap}
+.vp-green{background:var(--green-pill)}.vp-pink{background:var(--pink)}.vp-blue{background:var(--blue)}.vp-yellow{background:var(--yellow)}
+
+.panel{background:var(--tile);border-radius:16px;padding:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.panel-head p{color:var(--muted);font-size:12.5px;margin-top:3px;max-width:60ch}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--font);font-size:10.5px;fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:8px 10px;font-size:11.5px;min-width:150px;opacity:0;transition:opacity .1s;z-index:3}
+.tip b{display:block;margin-bottom:3px;font-size:12px}
+.tip div{display:flex;justify-content:space-between;gap:12px}
+.chartfoot{display:flex;gap:22px;flex-wrap:wrap;margin-top:6px}
+.chartfoot div b{font-size:15px;font-weight:700;display:block}
+.chartfoot div span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+
+/* sections */
+.sec{display:grid;gap:14px;scroll-margin-top:16px}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap}
+.sec-head p{color:var(--muted);font-size:13px;margin-top:4px;max-width:70ch}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1.5px solid #d4d4cf;background:none;border-radius:999px;padding:4px 13px;font-size:12px;font-weight:600;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.grp{background:var(--tile);border-radius:14px;padding:14px;display:grid;gap:10px;align-content:start;position:relative;overflow:hidden}
+.tag{justify-self:start;font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px}
+.grp .note{font-size:12px;color:var(--muted)}
+.grp .fields{display:grid;grid-template-columns:1fr 1fr;gap:9px 10px}
+.grp label{display:grid;gap:4px;font-size:11.5px;font-weight:600;color:#3f3f3c}
+.field{display:flex;align-items:center;background:var(--frame);border-radius:9px;border:1.5px solid transparent;overflow:hidden}
+.field:focus-within{border-color:var(--ink)}
+.field span{padding:0 8px;color:var(--muted);font-size:12px;white-space:nowrap}
+.field input{border:0;background:none;padding:7px 9px;width:100%;min-width:0;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.field input:focus{outline:none}
+.blob{position:absolute;right:-18px;top:-18px;width:90px;height:90px;opacity:.55;pointer-events:none}
+
+.tablewrap{background:var(--tile);border-radius:16px;padding:6px 14px 10px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:12.5px}
+th{font-size:11px;color:var(--muted);font-weight:600;text-align:left;padding:12px 8px 8px}
+td{padding:11px 8px;border-top:1px solid var(--line);vertical-align:middle}
+td.r,th.r{text-align:right}
+td b{font-weight:700}
+.status{font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;display:inline-block}
+.total td{font-weight:800;font-size:13.5px}
+
+.levers{background:var(--tile);border-radius:16px;padding:8px 16px}
+.lever{display:grid;grid-template-columns:34px minmax(150px,1.2fr) minmax(120px,1fr) 104px 32px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.lever:first-child{border-top:0}
+@media (max-width:700px){.lever{grid-template-columns:34px 1fr 32px}.lever .bar,.lever .val{grid-column:2}}
+.lever .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
+.lever .ic svg{width:16px;height:16px;stroke:var(--ink)}
+.lever .t{font-weight:700;font-size:13px}
+.lever .sub{font-size:11.5px;color:var(--muted)}
+.lever .bar{height:7px;background:var(--frame);border-radius:4px;overflow:hidden}
+.lever .bar i{display:block;height:100%;border-radius:4px}
+.lever .val{font-size:17px;font-weight:600;letter-spacing:-.02em;text-align:right}
+.lever .val small{font-size:10.5px;color:var(--muted);font-weight:500;margin-left:2px}
+.chev{width:30px;height:30px;border-radius:50%;border:1.5px solid #d4d4cf;background:none;display:grid;place-items:center;cursor:pointer}
+.chev svg{width:14px;height:14px;stroke:var(--ink);transition:transform .15s}
+.chev[aria-expanded="true"] svg{transform:rotate(90deg)}
+.how{grid-column:2/-1;background:var(--frame);border-radius:10px;padding:10px 12px;font-size:12.5px;display:none;gap:8px}
+.how.open{display:grid}
+.avatars{display:flex;align-items:center;gap:0}
+.avatars span{width:24px;height:24px;border-radius:50%;font-size:9.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--frame);margin-left:-5px}
+.avatars span:first-child{margin-left:0}
+.avatars em{font-style:normal;font-size:11.5px;color:var(--muted);margin-left:8px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.toast.on{opacity:1}
+.fine{color:var(--muted);font-size:11.5px;max-width:90ch}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+/* two-view additions */
+.view{display:none;gap:20px;align-content:start}
+main{align-content:start}
+.dash .stat .row{flex-wrap:wrap;row-gap:4px}
+.dash .stat .v{white-space:nowrap}
+.view.on{display:grid}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.hero p{color:var(--muted);max-width:66ch;margin-top:6px;font-size:13.5px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.form .grp{padding:18px}
+.form .fields{grid-template-columns:1fr}
+.form label{font-size:12.5px}
+.form label small{font-weight:500;color:var(--muted);font-size:11.5px}
+.form .field input{font-size:16px;padding:9px 10px}
+.cta{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:16px;padding:16px 20px}
+.cta .live{display:flex;align-items:center;gap:10px;font-size:13px;color:#d6cfc3}
+.cta .live b{color:#fff;font-size:18px;font-weight:600}
+.cta .live i{width:12px;height:12px;border-radius:50%;display:block}
+.cta a{background:var(--pink);color:var(--ink);text-decoration:none;font-weight:800;border-radius:999px;padding:10px 18px;font-size:13px}
+.fine-list{color:var(--muted);font-size:11.5px;max-width:92ch}
+
+.dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}.c3{grid-column:span 3}
+@media (max-width:1100px){.c3{grid-column:span 6}.c4,.c5,.c7,.c8{grid-column:span 12}}
+@media (max-width:620px){.c3,.c6{grid-column:span 12}}
+.dash .stat{min-height:118px;align-content:space-between}
+.dash .stat .v{font-size:30px}
+.ringpanel{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,1fr);gap:16px;align-items:center}
+@media (max-width:560px){.ringpanel{grid-template-columns:1fr}}
+.rl{display:grid;gap:10px}
+.rl .it{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;font-size:13px}
+.rl .it i{width:12px;height:12px;border-radius:50%}
+.rl .it b{font-variant-numeric:tabular-nums}
+.rl .it small{display:block;color:var(--muted);font-size:11.5px}
+.cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:0}
+.cmp th{font-size:11px;color:var(--muted);font-weight:600;text-align:left;padding:6px 6px 8px}
+.cmp td{padding:10px 6px;border-top:1px solid var(--line)}
+.cmp td.r,.cmp th.r{text-align:right}
+.cmp .vpill{font-size:12px}
+.assistant.wide .bubble.big{font-size:24px}
+/* AI success measurement */
+.ladder{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr);gap:8px;align-items:stretch}
+@media (max-width:760px){.ladder{grid-template-columns:1fr}.ladder .arrow{display:none}}
+.ladder .arrow{display:grid;place-items:center;color:var(--muted);font-weight:800}
+.lvl{border-radius:14px;padding:14px;display:grid;gap:6px;align-content:start;min-height:150px}
+.lvl .l{padding-right:22px}
+#v-kpi .lvl{grid-template-rows:auto 1fr auto 3.6em 26px;align-content:stretch}
+#v-kpi .lvl .s{align-self:start}
+#v-kpi .lvl .v{align-self:end;font-size:48px}
+#v-kpi .lvl .pill{align-self:start}
+.lvl .l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(21,21,21,.6)}
+.lvl .q{font-size:12.5px;font-weight:600}
+.lvl .v{font-size:32px;font-weight:500;letter-spacing:-.03em;line-height:1.05}
+.lvl .s{font-size:11.5px;color:rgba(21,21,21,.65)}
+.sdot{position:absolute;top:14px;right:14px;width:14px;height:14px;border-radius:50%;background:var(--green-pill);box-shadow:0 0 0 3px rgba(255,255,255,.6);display:block}
+.pill{justify-self:start;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.p-ok{background:var(--green-pill)}.p-mid{background:var(--yellow)}.p-bad{background:var(--pink)}.p-info{background:var(--blue)}.p-dark{background:var(--ink);color:#fff}
+.adopt{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center}
+@media (max-width:480px){.adopt{grid-template-columns:1fr}}
+.adopt .ringwrap{max-width:150px}
+.astats{display:grid;gap:10px}
+.astat{display:grid;gap:4px}
+.astat .top{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600}
+.astat .top b{font-variant-numeric:tabular-nums}
+.track{height:8px;background:var(--frame);border-radius:4px;position:relative;overflow:visible}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.track em{position:absolute;top:-5px;bottom:-5px;width:3px;background:var(--ink);border-radius:2px}
+.track em b{font-style:normal;position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:var(--ink);white-space:nowrap;background:var(--tile);padding:0 3px;border-radius:4px}
+.track em b.end{left:auto;right:-2px;transform:none}
+.track em b.start{left:-2px;transform:none}
+.astat .track{margin-top:20px}
+.oprow .track{margin-top:14px}
+.astat small{font-size:11px;color:var(--muted)}
+.oprow{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(120px,1fr) 64px 92px;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.oprow:first-of-type{border-top:0}
+@media (max-width:640px){.oprow{grid-template-columns:1fr auto}.oprow .track{grid-column:1/-1}}
+.oprow .n{font-weight:700;font-size:13px}
+.oprow .n small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
+.oprow .chg{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;font-size:13px}
+.oprow .pill{justify-self:end}
+.dimtag{display:inline-block;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;margin-right:6px;vertical-align:1px}
+.vrow{display:grid;grid-template-columns:150px minmax(0,1fr) 88px;gap:12px;align-items:center;padding:9px 0}
+@media (max-width:560px){.vrow{grid-template-columns:1fr auto}.vrow .vb{grid-column:1/-1}}
+.vrow .n{font-size:13px;font-weight:700}
+.vrow .n small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+.vb{display:flex;height:22px;gap:3px}
+.vb .ver{background:var(--pink);border-radius:6px}
+.vb .est{border:1.5px dashed var(--pink-deep);border-radius:6px}
+.vb .cost{background:var(--ink);border-radius:6px}
+.vrow .amt{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:13.5px}
+.vkey{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:6px}
+.vkey span{display:flex;align-items:center;gap:6px}
+.vkey i{width:16px;height:10px;border-radius:3px;display:block}
+.roigrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.roigrid .stat{min-height:112px}
+.ptable{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+.ptable th{font-size:11px;color:var(--muted);font-weight:600;text-align:left;padding:6px 8px 8px}
+.ptable td{padding:10px 8px;border-top:1px solid var(--line);vertical-align:middle}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.check i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.kgrid .grp{padding:18px}
+.kgrid .fields{grid-template-columns:1fr 1fr}
+.kgrid .wide{grid-column:1/-1}
+.kgrid .fields label{align-content:space-between}
+.ladderpanel{display:grid;grid-template-rows:auto 1fr}
+.ktable{width:100%;border-collapse:collapse;font-size:12.5px}
+.ktable th{font-size:11px;color:var(--muted);font-weight:600;text-align:left;padding:4px 6px}
+.ktable td{padding:5px 6px;vertical-align:middle}
+.ktable .field input{font-size:14px;padding:6px 8px}
+.ktable input[type=text]{width:100%}
+.tg{border:1.5px solid #d4d4cf;background:none;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tg[aria-pressed="true"]{background:var(--green-pill);border-color:var(--green-pill)}
+.addrow{border:1.5px dashed #c2c2bc;background:none;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;justify-self:start}
+.rm{border:0;background:none;font-size:18px;color:var(--muted);cursor:pointer;padding:2px 6px}
+.textin{background:var(--frame);border:1.5px solid transparent;border-radius:9px;padding:7px 9px;font-size:13.5px;font-weight:600;width:100%}
+.textin:focus{outline:none;border-color:var(--ink)}
+#v-kpi .panel-head p,#v-kpi .vrow .n small,#v-kpi .lvl .q,#v-kpi .stat .c,#v-kpi .astat small{display:none}
+#v-kpi .panel-head{margin-bottom:14px}
+.tier{border-radius:16px;padding:16px 18px;display:grid;gap:4px;position:relative;align-content:start;min-height:150px}
+.tier .k{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700}
+.tier .k .dot{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.6);display:grid;place-items:center}
+.tier .k svg{width:12px;height:12px;stroke:var(--ink)}
+.tier .tv{font-size:44px;font-weight:500;letter-spacing:-.03em;line-height:1.1;margin-top:10px}
+.tier .ts{font-size:12px;color:rgba(21,21,21,.65)}
+.tier .pill{margin-top:6px}
+.tier .sdot{top:16px;right:16px}
+.hero .pillbtn{align-self:end}
+.subhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px}
+.subhead h2{font-size:22px}
+.verdict-pill{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:999px;padding:6px 14px 6px 10px;font-size:13.5px;font-weight:800}
+.verdict-pill i{width:11px;height:11px;border-radius:50%;display:block}
+.verdict-pill span{font-weight:500;color:#cfc8bb;font-size:12.5px;max-width:60ch}
+@media (max-width:900px){.verdict-pill span{display:none}#dbsub{white-space:normal!important}}
+.minirow{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1100px){.minirow{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.minirow{grid-template-columns:1fr}}
+#v-roi .ringpanel{grid-template-columns:minmax(140px,170px) minmax(0,1fr)}
+#v-roi .stat .c{display:none}
+#v-roi .rl .it small{display:none}
+#v-roi .verdict-pill span{display:none}
+#v-roi .ringpanel{grid-template-columns:minmax(150px,190px) minmax(0,1fr);align-items:center}
+.s-lilac{background:var(--lilac)}.s-peach{background:#f4cba9}
+.bvt{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+.bvt th{font-size:11px;color:var(--muted);font-weight:600;text-align:left;padding:4px 10px 10px}
+.bvt td{padding:12px 10px;border-top:1px solid var(--line);vertical-align:middle}
+.bvt td small{display:block;font-size:11.5px;color:var(--muted);font-weight:500;margin-top:2px}
+.bvt .r{text-align:right}.bvt .big{font-size:17px;font-weight:700}
+.bvt td:nth-child(4){width:30%}
+.bvt .pill{justify-self:end}
+.spark text{font-family:var(--font);font-size:10px;fill:var(--muted)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-dollar" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M16.5 7.5C16 6 14.3 5 12 5c-2.8 0-4.5 1.4-4.5 3.3 0 4.4 9 2.4 9 7 0 2-1.9 3.4-4.5 3.4-2.5 0-4.3-1.1-4.8-2.9"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-hour" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="7.5" r="1.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  </defs>
+</svg>
+<div class="shell">
+<div class="frame">
+
+  <main>
+    <header class="mainbar">
+      <nav class="pagetoggle" aria-label="Pages"><a href="#kpi" data-nav="kpi">AI Performance Dashboard</a><a href="#roi" data-nav="roi">AI ROI Calculator</a></nav>
+      <div class="mb-brand"><span>Designed by</span><b>Weiwei Hu</b></div>
+      <nav class="links" aria-label="Weiwei Hu online">
+        <a class="lpill" href="https://www.linkedin.com/in/weiweihu" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a class="lpill" href="https://github.com/wei-wei-hu" target="_blank" rel="noopener">GitHub ↗</a>
+        <a class="lpill" href="https://weiweihu.carrd.co/" target="_blank" rel="noopener">Website ↗</a>
+      </nav>
+    </header>
+
+    <!-- KPI DASHBOARD -->
+    <section class="view" id="v-kpi" aria-labelledby="h-kd">
+      <div class="hero"><div><h1 id="h-kd">AI Performance Dashboard</h1><p id="kdsub" style="max-width:none"></p></div><div class="exports" aria-label="Export"><button class="lpill dl" data-export="pdf" data-scope="kpi">PDF</button><button class="lpill" data-print="kpi">Print</button></div></div>
+      <div class="dash">
+        <div class="c3 tier s-pink" id="t1"></div>
+        <div class="c3 tier s-blue" id="t2"></div>
+        <div class="c3 tier s-yellow" id="t3"></div>
+        <div class="c3 tier s-olive" id="t4"></div>
+
+        <div class="c5 panel">
+          <div class="panel-head"><div><h3>1 · AI adoption and usage</h3><p>Are employees using AI consistently?</p></div></div>
+          <div class="adopt"><div class="ringwrap" id="aring"></div><div class="astats" id="astats"></div></div>
+          <div class="chart spark" style="margin-top:14px"><svg id="spark" viewBox="0 0 520 130" role="img" aria-labelledby="spark-desc"><desc id="spark-desc"></desc></svg></div>
+        </div>
+        <div class="c7 panel">
+          <div class="panel-head"><div><h3>2 · AI operational performance</h3><p>Is AI improving how the business runs? Bars show how much of the gap between baseline and target has closed; the black tick is the target.</p></div></div>
+          <div id="ops"></div>
+        </div>
+
+        <div class="c12 panel">
+          <div class="panel-head"><div><h3>3 · AI business value</h3></div></div>
+          <div class="tablewrap" style="padding:0;background:none"><table class="bvt" id="bvt"></table></div>
+        </div>
+      </div>
+      <p class="fine-list" style="max-width:none">Actual counts verified value only; estimates are shown separately. Plan comes from the AI ROI Calculator tab. Verified ROI = (verified financial benefit − total AI cost) ÷ total AI cost.</p>
+    </section>
+
+    <!-- ROI CALCULATOR -->
+    <section class="view" id="v-roi" aria-labelledby="h-db">
+      <div class="hero">
+        <div><h1 id="h-db">AI ROI Calculator</h1><p id="dbsub" style="max-width:none;white-space:nowrap">Is this AI investment worth funding? Change the assumptions to see updated results.</p></div>
+      </div>
+      <div class="subhead"><h2>Key assumptions</h2></div>
+      <div class="form" id="form"></div>
+      <div class="subhead"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2>Estimated AI ROI</h2><span class="verdict-pill" id="verdict" aria-live="polite"></span></div><div class="exports" aria-label="Export"><button class="lpill dl" data-export="pdf" data-scope="roi">PDF</button><button class="lpill" data-print="roi">Print</button></div></div>
+      <div class="dash">
+        <div class="c4 stat s-pink" id="k1"></div>
+        <div class="c4 stat s-blue" id="k2"></div>
+        <div class="c4 stat s-yellow" id="k3"></div>
+        <div class="c4 stat s-olive" id="k4"></div>
+        <div class="c4 stat s-lilac" id="k5"></div>
+        <div class="c4 stat s-peach" id="k6"></div>
+
+        <div class="c7 panel">
+          <div class="panel-head"><div><h3>Payback timeline</h3></div></div>
+          <div class="chart" id="chartbox"><svg id="chart" viewBox="0 0 720 250" role="img" aria-labelledby="chart-desc"><desc id="chart-desc"></desc></svg><div class="tip" id="tip"></div></div>
+        </div>
+        <div class="c5 panel">
+          <div class="panel-head"><div><h3>Hours saved vs. Value captured</h3></div></div>
+          <div class="ringpanel"><div class="ringwrap" id="ring"></div><div class="rl" id="ringlegend"></div></div>
+        </div>
+
+      </div>
+    </section>
+    <footer class="legal">
+      <p><b>© 2026 Weiwei Hu. All rights reserved.</b></p>
+      <p>Proprietary and protected by copyright. No license granted: no copying, modification, distribution, derivative works or commercial use without written permission from Weiwei Hu.</p>
+      <p>Figures are illustrative estimates for discussion only, not financial, legal or investment advice.</p>
+    </footer>
+  </main>
+</div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const FIELDS=[
+ {tag:"People and time",color:"var(--yellow)",blob:"star",items:[
+  ["emp","Employees using AI","","",""],
+  ["hrs","Hours saved per employee per week","","","hrs"],
+  ["weeks","Working weeks per year","","","weeks"]]},
+ {tag:"Value",color:"var(--pink)",blob:"heart",items:[
+  ["rate","Labor cost","Salary plus benefits and overhead","$","/hr"],
+  ["real","Value realization rate","Share of saved time that becomes real financial benefit","","%"]]},
+ {tag:"Costs",color:"var(--lilac)",blob:"circle",items:[
+  ["upfront","Upfront implementation cost","","$",""],
+  ["opex","Annual operating cost","","$","/yr"]]}
+];
+const PRESETS={
+ article:{label:"Article example",v:{emp:50,hrs:5,weeks:48,rate:65,real:50,upfront:50000,opex:60000}},
+ support:{label:"Support team",v:{emp:120,hrs:3,weeks:46,rate:40,real:40,upfront:80000,opex:90000}},
+ finance:{label:"Finance team",v:{emp:30,hrs:6,weeks:48,rate:75,real:60,upfront:60000,opex:45000}}
+};
+const KEY="airoi-article-v1";
+let S,preset="article";
+try{const o=JSON.parse(localStorage.getItem(KEY));if(o&&o.v){S=o.v;preset=o.p||"custom";}}catch(e){}
+if(!S)S={...PRESETS.article.v};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({v:S,p:preset}))}catch(e){}};
+const $=s=>document.querySelector(s);
+const fmt=n=>{const a=Math.abs(n);const s=a>=1e6?"$"+(a/1e6).toFixed(a>=1e7?0:1)+"M":"$"+Math.round(a).toLocaleString("en-US");return (n<0?"−":"")+s;};
+const fmtK=n=>{const a=Math.abs(n);const s=a>=1e6?"$"+(a/1e6).toFixed(1)+"M":a>=1000?"$"+(a/1000).toFixed(a>=1e4?0:1)+"k":"$"+Math.round(a);return (n<0?"−":"")+s;};
+const money2=n=>{const r1=Math.round(n*10)/10;return "$"+(n>=10||Number.isInteger(r1)?Math.round(n).toLocaleString("en-US"):r1.toFixed(1));};
+const nf=n=>Math.round(n).toLocaleString("en-US");
+
+function model(p){
+  const v=k=>Math.max(0,+p[k]||0),real=Math.min(100,v("real"))/100;
+  const hours=v("emp")*v("hrs")*v("weeks");            // hours saved per year
+  const capacity=hours*v("rate");                        // step 1: annual AI capacity value
+  const benefit=capacity*real;                           // step 2: estimated financial benefit
+  const upfront=v("upfront"),opex=v("opex"),cost1=upfront+opex;
+  const net1=benefit-cost1;                              // step 3: net first-year benefit
+  const roi=cost1>0?net1/cost1:0;                        // step 4: first-year ROI
+  const monthly=(benefit-opex)/12;
+  const payback=monthly>0?upfront/monthly:null;          // step 5: payback in months
+  const cum=[-upfront];for(let m=1;m<=24;m++)cum.push(cum[m-1]+monthly);
+  const pbMonth=payback===null?null:Math.ceil(payback-1e-9);
+  const capH=hours*real,uncapH=hours-capH,fteHrs=40*Math.max(1,v("weeks"));
+  return {hours,capacity,benefit,upfront,opex,cost1,net1,roi,monthly,payback,cum,payback_m:pbMonth,y2:cum[24],
+    capH,uncapH,fte:capH/fteHrs,costPerHr:hours?cost1/hours:0,real};
+}
+function verdict(e){
+  if(e.monthly<=0)return ["Doesn't pay","var(--pink-deep)","The yearly benefit doesn't cover the operating cost."];
+  if(e.payback<=12)return ["Fund it","var(--green-pill)",""];
+  if(e.payback<=18)return ["Fund a pilot first","var(--yellow)",""];
+  return ["Weak case","var(--pink-deep)",""];
+}
+
+/* ---------- assumptions view ---------- */
+const BLOBS={
+ star:'<svg class="blob" viewBox="0 0 100 100"><path fill="var(--yellow-deep)" d="M50 4l9 29 30-6-21 22 21 22-30-6-9 29-9-29-30 6 21-22L11 27l30 6z"/></svg>',
+ heart:'<svg class="blob" viewBox="0 0 100 100"><path fill="var(--pink-deep)" d="M50 88S10 62 10 36c0-14 11-24 23-24 8 0 14 4 17 10 3-6 9-10 17-10 12 0 23 10 23 24 0 26-40 52-40 52z"/></svg>',
+ circle:'<svg class="blob" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#9a88d6" stroke-width="18"/></svg>'
+};
+function renderPresets(){if(!document.getElementById("presets"))return;
+  $("#presets").innerHTML=Object.entries(PRESETS).map(([k,p])=>`<button class="chip" data-preset="${k}" aria-pressed="${preset===k}">${p.label}</button>`).join("")+(preset==="custom"?`<button class="chip" aria-pressed="true" disabled>Your own</button>`:"");
+}
+function renderForm(){
+  $("#form").innerHTML=FIELDS.map(g=>`<div class="grp">${BLOBS[g.blob]}<span class="tag" style="background:${g.color}">${g.tag}</span>
+   <div class="fields">${g.items.map(([id,l,h,pre,suf])=>`<label for="in-${id}">${l}<small>${h}</small><span class="field">${pre?`<span>${pre}</span>`:""}<input type="number" min="0" step="any" inputmode="decimal" id="in-${id}" data-in="${id}" value="${S[id]}">${suf?`<span>${suf}</span>`:""}</span></label>`).join("")}</div></div>`).join("");
+}
+function renderLive(){if(!document.getElementById("live"))return;
+  const e=model(S),[vt,col]=verdict(e);
+  $("#live").innerHTML=`<i style="background:${col}"></i><span>Current call</span><b>${vt}</b><span>· ${fmtK(e.net)} net per month</span>`;
+}
+
+/* ---------- dashboard view ---------- */
+function ring(m){
+  const parts=[["Captured as value",m.capH,"var(--pink)"],["Saved but not captured",m.uncapH,"var(--yellow)"]];
+  const tot=parts.reduce((t,p)=>t+p[1],0)||1,R=78,C=2*Math.PI*R,gap=parts.filter(p=>p[1]>0).length>1?14:0;
+  let off=0,arcs="",marks="";
+  parts.forEach(([n,v,col])=>{if(v<=0)return;const len=v/tot*C,seg=Math.max(0,len-gap);
+    arcs+=`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${col}" stroke-width="22" stroke-linecap="round" stroke-dasharray="${seg} ${C-seg}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"><title>${n}: ${nf(v)} hours</title></circle>`;
+    const a=(off+seg/2)/C*2*Math.PI-Math.PI/2;
+    if(seg>22){const cx=100+R*Math.cos(a),cy=100+R*Math.sin(a);marks+=`<g><circle cx="${cx}" cy="${cy}" r="11" fill="#fff"/><text x="${cx}" y="${cy+3.2}" text-anchor="middle" style="font:800 8.5px Manrope,sans-serif;fill:#151515">${Math.round(v/tot*100)}%</text></g>`;}
+    off+=len;});
+  $("#ring").innerHTML=`<svg viewBox="0 0 200 200" role="img" aria-label="Of ${nf(m.hours)} hours saved a year, ${nf(m.capH)} become financial value">${arcs}${marks}</svg>
+   <div class="ringcenter"><div><b class="num" style="font-size:clamp(24px,2.6vw,32px)">${nf(m.hours)}</b><span>hours saved<br>a year</span></div></div>`;
+  $("#ringlegend").innerHTML=parts.map(([n,v,col])=>`<div class="it"><i style="background:${col}"></i><div>${n}</div><b>${nf(v)} hrs</b></div>`).join("")+
+    `<div class="it" style="border-top:1px solid var(--line);padding-top:10px"><i style="background:#151515"></i><div>Equivalent full-time staff</div><b>${m.fte.toFixed(1)} FTE</b></div>`;
+}
+function renderDash(){
+  const cur=model(S);
+  const [vt,vcol,vx]=verdict(cur);
+  $("#verdict").innerHTML=`<i style="background:${vcol}"></i>${vt}<span>${vx}</span>`;
+  ring(cur);
+  const stat=(id,icon,label,val,pill)=>$(id).innerHTML=`<span class="k"><span class="dot"><svg><use href="#${icon}"/></svg></span>${label}</span><div class="row"><span class="v num">${val}</span>${pill?`<span class="d">${pill}</span>`:""}</div>`;
+  stat("#k1","i-hour","Annual capacity value",fmtK(cur.capacity),"per year");
+  stat("#k2","i-dollar","Financial benefit",fmtK(cur.benefit),"per year");
+  stat("#k3","i-chart","Net first-year benefit",fmtK(cur.net1),"");
+  stat("#k4","i-trend","First-year ROI",Math.round(cur.roi*100)+"%","");
+  stat("#k5","i-clock","Payback",cur.payback===null?"Never":cur.payback<10?cur.payback.toFixed(1)+" months":Math.round(cur.payback)+" months","");
+  stat("#k6","i-tag","AI cost per hour saved",money2(cur.costPerHr),"");
+  drawChart(cur);
+}
+function drawChart(cur){
+  const W=720,H=250,m={l:48,r:8,t:26,b:26},iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const all=[...cur.cum,0];let lo=Math.min(...all),hi=Math.max(...all);
+  const step=nice((hi-lo)/4);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;if(hi===lo)hi=lo+step;
+  const bw=iw/25,x=i=>m.l+i*bw+bw/2,y=v=>m.t+(hi-v)/(hi-lo)*ih;
+  let g="";
+  for(let v=lo;v<=hi+1e-6;v+=step)g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-6?"#151515":"#e2e2de"}" stroke-width="1" ${Math.abs(v)<1e-6?"":'stroke-dasharray="3 4"'}/><text x="${m.l-8}" y="${y(v)+3.5}" text-anchor="end">${fmtK(v)}</text>`;
+  [0,6,12,18,24].forEach(i=>g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${i===0?"Start":"M"+i}</text>`);
+  let bars="";
+  cur.cum.forEach((v,i)=>{const h=Math.max(2,Math.abs(y(v)-y(0))),w=bw*.62,bx=x(i)-w/2,isPB=cur.payback_m===i;
+    if(v<0)bars+=`<rect x="${bx}" y="${y(0)}" width="${w}" height="${h}" rx="5" fill="none" stroke="var(--pink-deep)" stroke-width="1.4" stroke-dasharray="3 3"/>`;
+    else{const hh=isPB?Math.max(8,h):h;bars+=`<rect x="${bx}" y="${y(0)-hh}" width="${w}" height="${hh}" rx="4" fill="${isPB?"#151515":"var(--pink)"}"/>`;}});
+  if(cur.payback_m){const v=cur.cum[cur.payback_m];bars+=`<g transform="translate(${x(cur.payback_m)},${y(Math.max(v,0))-14})"><rect x="-38" y="-14" width="76" height="18" rx="9" fill="#151515"/><text x="0" y="-1.5" text-anchor="middle" style="fill:#fff;font-weight:700;font-size:10.5px">Pays back</text></g>`;}
+  $("#chart").innerHTML=`<desc id="chart-desc">Cumulative cash over 24 months, ending at ${fmt(cur.y2)}${cur.payback_m?`, paying back in month ${cur.payback_m}`:", not paying back within 24 months"}.</desc>
+   <g>${g}</g>${bars}
+   <line id="xh" y1="${m.t}" y2="${m.t+ih}" stroke="#151515" stroke-width="1" opacity="0"/><rect id="hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/>`;
+  const svg=$("#chart"),tip=$("#tip"),hit=$("#hit"),xh=$("#xh");
+  hit.addEventListener("pointermove",ev=>{const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)/r.width*W,i=Math.max(0,Math.min(24,Math.floor((px-m.l)/bw)));
+    xh.setAttribute("x1",x(i));xh.setAttribute("x2",x(i));xh.setAttribute("opacity",.35);
+    tip.innerHTML=`<b>${i===0?"At start":"End of month "+i}</b><div><span>Cumulative cash</span><span class="num">${fmt(cur.cum[i])}</span></div>`;
+    tip.style.left=Math.min(r.width-165,Math.max(0,x(i)/W*r.width+12))+"px";tip.style.top="0px";tip.style.opacity=1;});
+  hit.addEventListener("pointerleave",()=>{tip.style.opacity=0;xh.setAttribute("opacity",0);});
+}
+function nice(raw){if(raw<=0)return 1000;const p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+
+/* ---------- routing, copy, events ---------- */
+/* ================= AI SUCCESS MEASUREMENT ================= */
+const KDEF={period:"First 12 months",roiT:100,initT:4,elig:60,active:46,wau:40,adoptT:83,cases:24,casesT:30,trend:"40, 55, 63, 70, 74, 77",
+ ops:[{n:"End-to-end completion time",d:"Speed",u:"days",b:10,c:7,t:5},
+      {n:"Manual effort per case",d:"Efficiency",u:"hrs",b:6,c:3.5,t:3},
+      {n:"Error and rework rate",d:"Quality",u:"%",b:8,c:5,t:4},
+      {n:"Decision cycle time",d:"Decisions",u:"days",b:12,c:11,t:6}],
+ savV:250000,savE:140000,gpV:0,gpE:0,cost:110000,hrs:9600,
+ inits:[{n:"Customer refunds agent",o:"Head of Support",ops:true,fin:true},
+        {n:"Invoice matching",o:"Finance Ops lead",ops:true,fin:false},
+        {n:"Sales forecast assistant",o:"VP Sales",ops:true,fin:true},
+        {n:"HR policy assistant",o:"HR Director",ops:false,fin:false},
+        {n:"Contract review",o:"General Counsel",ops:true,fin:false},
+        {n:"Marketing content copilot",o:"CMO",ops:false,fin:true}]};
+const KKEY="aikpi-v1";
+let K;
+K=JSON.parse(JSON.stringify(KDEF));
+const ksave=()=>{try{localStorage.setItem(KKEY,JSON.stringify(K))}catch(e){}};
+const DIMC={Speed:"var(--pink)",Efficiency:"var(--yellow)",Quality:"var(--blue)",Decisions:"var(--olive)"};
+const pctf=x=>Math.round(x*100)+"%";
+
+function kcalc(){
+  const n=k=>Math.max(0,+K[k]||0);
+  const adopt=n("elig")?n("active")/n("elig"):0, wauR=n("elig")?n("wau")/n("elig"):0;
+  const trend=String(K.trend).split(/[,\s]+/).map(Number).filter(x=>!isNaN(x)&&x>=0);
+  const ops=K.ops.map(o=>{const b=+o.b||0,c=+o.c||0,t=+o.t||0;const gap=b-t;const prog=gap>0?Math.max(0,Math.min(1.2,(b-c)/gap)):0;const chg=b?(c-b)/b:0;
+    const st=prog>=1?["On target","p-ok"]:prog>=.5?["On track","p-mid"]:["Behind","p-bad"];return {...o,b,c,t,prog,chg,st};});
+  const onTrack=ops.filter(o=>o.prog>=.5).length, onTarget=ops.filter(o=>o.prog>=1).length;
+  const ver=n("savV")+n("gpV"),est=n("savE")+n("gpE"),cost=n("cost");
+  const vroi=cost?(ver-cost)/cost:0, froi=cost?(ver+est-cost)/cost:0;
+  const cph=n("hrs")?cost/n("hrs"):0, unver=(ver+est)?est/(ver+est):0;
+  const inits=K.inits.map(i=>{const d=i.ops&&i.fin?["Scale","p-ok","Proven on both counts. Expand to more teams."]:i.ops?["Prove the value","p-mid","Work is faster or better; now confirm the money in the accounts."]:i.fin?["Check attribution","p-info","Value is claimed but operations haven't moved. Confirm AI is the cause."]:["Redirect","p-bad","No measurable result yet. Fix the use case or move the budget."];return {...i,dec:d};});
+  const both=inits.filter(i=>i.ops&&i.fin).length;
+  return {adopt,wauR,trend,ops,onTrack,onTarget,ver,est,cost,vroi,froi,cph,unver,inits,both};
+}
+function kverdict(r){
+  if(r.vroi>=.5&&r.onTrack>=3)return ["Delivering verified value","var(--green-pill)"];
+  if(r.vroi>0)return ["Delivering, with gaps to close","var(--yellow)"];
+  if(r.adopt>=.6)return ["Usage is up; returns aren't proven yet","var(--pink-deep)"];
+  return ["Too early to judge","var(--blue-deep)"];
+}
+
+/* ---- inputs view ---- */
+function kField(id,l,h,pre,suf,type){return `<label for="k-${id}">${l}${h?`<small>${h}</small>`:""}<span class="field">${pre?`<span>${pre}</span>`:""}<input type="${type||"number"}" ${type?"":'min="0" step="any" inputmode="decimal"'} id="k-${id}" data-k="${id}" value="${K[id]}">${suf?`<span>${suf}</span>`:""}</span></label>`;}
+function renderKForm(){
+  $("#k-period").value=K.period;
+  $("#kform").innerHTML=`
+   <div class="grp">${BLOBS.heart}<span class="tag" style="background:var(--pink)">Adoption and usage</span><div class="fields">
+     ${kField("elig","Eligible employees","","","")}${kField("active","Active AI users","Used AI this month","","")}
+     ${kField("wau","Weekly active users","","","")}${kField("adoptT","Adoption target","","","%")}
+     ${kField("freq","Days of use per week","Average per active user","","days")}${kField("freqT","Frequency target","","","days")}
+     ${kField("cases","Documented use cases","With evidence of results","","")}${kField("casesT","Use case target","","","")}
+     <label class="wide" for="k-trend">Monthly adoption rate, oldest first<small>Percentages separated by commas</small><input class="textin" type="text" id="k-trend" data-k="trend" value="${K.trend}"></label></div></div>
+   <div class="grp">${BLOBS.circle}<span class="tag" style="background:var(--lilac)">Business value, year to date</span><div class="fields">
+     ${kField("savV","Cost savings, verified","Shows up in the accounts","$","")}${kField("savE","Cost savings, estimated","Not yet verified","$","")}
+     ${kField("gpV","Incremental gross profit, verified","Credibly linked to AI","$","")}${kField("gpE","Incremental gross profit, estimated","","$","")}
+     ${kField("cost","Total AI cost","Setup plus operating","$","")}${kField("hrs","Verified hours saved","","","hrs")}</div></div>`;
+  $("#kops").innerHTML=`<thead><tr><th>Measure</th><th>Unit</th><th>Baseline</th><th>Now</th><th>Target</th></tr></thead><tbody>${K.ops.map((o,i)=>`<tr>
+    <td><span class="dimtag" style="background:${DIMC[o.d]}">${o.d}</span><b>${o.n}</b></td><td style="color:var(--muted)">${o.u}</td>
+    ${["b","c","t"].map(f=>`<td><span class="field"><input type="number" min="0" step="any" inputmode="decimal" aria-label="${o.n} ${f==="b"?"baseline":f==="c"?"now":"target"}" data-op="${i}:${f}" value="${o[f]}"></span></td>`).join("")}</tr>`).join("")}</tbody>`;
+  renderKInits();
+}
+function renderKInits(){
+  $("#kinits").innerHTML=`<thead><tr><th>Initiative</th><th>Business owner</th><th>Operational improvement</th><th>Financial value</th><th></th></tr></thead><tbody>${K.inits.map((it,i)=>`<tr>
+    <td><input class="textin" type="text" aria-label="Initiative name" data-pi="${i}:n" value="${it.n.replace(/"/g,"&quot;")}"></td>
+    <td><input class="textin" type="text" aria-label="Business owner" data-pi="${i}:o" value="${it.o.replace(/"/g,"&quot;")}"></td>
+    <td><button class="tg" data-pt="${i}:ops" aria-pressed="${it.ops}">${it.ops?"Shown":"Not yet"}</button></td>
+    <td><button class="tg" data-pt="${i}:fin" aria-pressed="${it.fin}">${it.fin?"Verified":"Not yet"}</button></td>
+    <td><button class="rm" data-prm="${i}" aria-label="Remove ${it.n}">×</button></td></tr>`).join("")}</tbody>`;
+}
+function renderKLive(){
+  const r=kcalc(),[vt,col]=kverdict(r);
+  $("#klive").innerHTML=`<i style="background:${col}" title="${vt}"></i><span>Verified ROI</span><b>${pctf(r.vroi)}</b>`;
+}
+
+/* ---- dashboard view ---- */
+function adoptRing(a,t){
+  const R=60,C=2*Math.PI*R,len=Math.min(1,a)*C,ta=Math.min(1,t)*2*Math.PI-Math.PI/2;
+  $("#aring").innerHTML=`<svg viewBox="0 0 150 150" role="img" aria-label="Adoption ${pctf(a)} against a ${pctf(t)} target"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--frame)" stroke-width="16"/>
+   <circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--pink)" stroke-width="16" stroke-linecap="round" stroke-dasharray="${len} ${C}" transform="rotate(-90 75 75)"/>
+   <line x1="${75+(R-11)*Math.cos(ta)}" y1="${75+(R-11)*Math.sin(ta)}" x2="${75+(R+11)*Math.cos(ta)}" y2="${75+(R+11)*Math.sin(ta)}" stroke="#151515" stroke-width="3" stroke-linecap="round"/></svg>
+   <div class="ringcenter"><div><b class="num" style="font-size:34px">${pctf(a)}</b><span>adoption<br>target ${pctf(t)}</span></div></div>`;
+}
+function spark(tr,t){
+  const W=520,H=130,m={l:34,r:14,t:14,b:22},iw=W-m.l-m.r,ih=H-m.t-m.b;
+  if(tr.length<2){$("#spark").innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle">Add two or more monthly figures to see the trend</text>`;return;}
+  const hi=Math.max(100,...tr),x=i=>m.l+i/(tr.length-1)*iw,y=v=>m.t+(1-v/hi)*ih;
+  let g="";[0,50,100].forEach(v=>g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${m.l-6}" y="${y(v)+3}" text-anchor="end">${v}%</text>`);
+  const pts=tr.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+  const area=`M${x(0)},${y(0)} L${pts.join(" L")} L${x(tr.length-1)},${y(0)} Z`;
+  const last=tr[tr.length-1];
+  $("#spark").innerHTML=`<desc id="spark-desc">Monthly adoption rate over ${tr.length} months, from ${tr[0]}% to ${last}%, against a ${Math.round(t*100)}% target.</desc>${g}
+   <line x1="${m.l}" x2="${W-m.r}" y1="${y(t*100)}" y2="${y(t*100)}" stroke="#151515" stroke-width="1.2" stroke-dasharray="6 4"/><text x="${m.l+4}" y="${y(t*100)-5}" text-anchor="start" style="fill:#151515;font-weight:700">Target ${Math.round(t*100)}%</text>
+   <path d="${area}" fill="var(--pink)" opacity=".35"/><path d="M${pts.join(" L")}" fill="none" stroke="var(--pink-deep)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+   <circle cx="${x(tr.length-1)}" cy="${y(last)}" r="5" fill="var(--pink-deep)" stroke="#fff" stroke-width="2"/>
+   <text x="${x(0)}" y="${H-5}" text-anchor="start">${tr.length} months ago</text><text x="${x(tr.length-1)}" y="${H-5}" text-anchor="end">Latest: ${last}%</text>`;
+}
+function renderKDash(){
+  const P=model(S),planEmp=Math.max(0,+S.emp||0);
+  K.adoptT=Math.round(Math.min(1,planEmp/Math.max(1,+K.elig||0))*100);K.roiT=Math.round(P.roi*100);
+  const r=kcalc(),[vt,vcol]=kverdict(r),n=k=>Math.max(0,+K[k]||0);
+  $("#kdsub").textContent=`${K.period||"Current period"} · actuals against the plan in the AI ROI Calculator.`;
+  const ofT=(a,t)=>t>0?a/t:0;
+  const pTag=x=>{const pc=Math.round(x*100),c=x>=1?"p-ok":x>=.8?"p-mid":"p-bad";return `<span class="pill ${c}">${pc}% of target</span>`;};
+  const opsProg=r.ops.reduce((t,o)=>t+Math.min(1,o.prog),0)/Math.max(1,r.ops.length);
+  const tier=(id,icon,l,v,s,x)=>$(id).innerHTML=`<span class="k"><span class="dot"><svg><use href="#${icon}"/></svg></span>${l}</span><span class="tv num">${v}</span><span class="ts">${s}</span>${pTag(x)}`;
+  tier("#t1","i-user","Adoption",`${nf(n("active"))} of ${nf(planEmp)}`,`planned AI users · ${pctf(r.adopt)} of eligible`,ofT(n("active"),planEmp));
+  tier("#t2","i-bolt","Operations",`${r.onTarget} of ${r.ops.length}`,"measures on target",opsProg);
+  tier("#t3","i-trend","Verified ROI",pctf(r.vroi),`Plan ${pctf(P.roi)}`,ofT(r.vroi,P.roi));
+  tier("#t4","i-target","Valuable initiatives",`${r.both} of ${r.inits.length}`,`Target ${n("initT")}`,ofT(r.both,n("initT")));
+  adoptRing(r.adopt,n("adoptT")/100);
+  const tlab=(pos,txt)=>`<b class="${pos>85?"end":pos<15?"start":""}">${txt}</b>`;
+  const bar=(v,t,col,lab)=>`<div class="track"><i style="width:${Math.min(100,v*100)}%;background:${col}"></i><em style="left:calc(${Math.min(100,t*100)}% - 1.5px)">${tlab(Math.min(100,t*100),lab)}</em></div>`;
+  $("#astats").innerHTML=`
+   <div class="astat"><div class="top"><span>Weekly active users</span><b>${nf(n("wau"))}</b></div>${bar(n("wau")/Math.max(1,planEmp*1.2),1/1.2,"var(--blue)",nf(planEmp))}<small>Plan ${nf(planEmp)} users</small></div>
+   <div class="astat"><div class="top"><span>Hours saved per user per week</span><b>${(n("hrs")/Math.max(1,n("active")*Math.max(1,+S.weeks||48))).toFixed(1)}</b></div>${bar((n("hrs")/Math.max(1,n("active")*Math.max(1,+S.weeks||48)))/Math.max(0.1,(+S.hrs||0)*1.25),0.8,"var(--yellow)",(+S.hrs||0)+"h")}<small>Plan ${S.hrs} hrs</small></div>
+   <div class="astat"><div class="top"><span>Documented use cases</span><b>${nf(n("cases"))}</b></div>${bar(n("casesT")?n("cases")/Math.max(n("cases"),n("casesT"))*1:0,n("casesT")/Math.max(n("cases"),n("casesT")),"var(--olive)",nf(n("casesT")))}<small>With evidence of results · target ${nf(n("casesT"))}</small></div>`;
+  spark(r.trend,n("adoptT")/100);
+  $("#ops").innerHTML=r.ops.map(o=>`<div class="oprow">
+    <div class="n"><span class="dimtag" style="background:${DIMC[o.d]}">${o.d}</span>${o.n}<small>${o.b} → ${o.c} ${o.u}</small></div>
+    <div class="track" title="${Math.round(Math.min(1,o.prog)*100)}% of the gap closed"><i style="width:${Math.min(100,o.prog/1.2*100)}%;background:${DIMC[o.d]}"></i><em style="left:calc(${100/1.2}% - 1.5px)">${tlab(83,o.t+(o.u==="%"?"%":o.u==="days"?"d":o.u==="hrs"?"h":" "+o.u))}</em></div>
+    <span class="chg">${o.chg<=0?"↓":"↑"} ${Math.abs(Math.round(o.chg*100))}%</span>${o.st[1]==="p-ok"?`<span class="sdot" style="position:static;justify-self:end" title="On target"></span>`:`<span class="pill ${o.st[1]}">${o.st[0]}</span>`}</div>`).join("");
+  const rows=[
+   ["Hours saved",n("hrs"),P.hours,v=>nf(v),true,""],
+   ["Financial benefit",r.ver,P.benefit,fmtK,true,r.est>0?`+${fmtK(r.est)} estimated`:""],
+   ["Total AI cost",r.cost,P.cost1,fmtK,false,""],
+   ["Net value",r.ver-r.cost,P.net1,fmtK,true,"Financial benefit − total AI cost"],
+   ["ROI",r.vroi,P.roi,pctf,true,`${pctf(r.froi)} if every estimate is confirmed`],
+   ["AI cost per hour saved",r.cph,P.costPerHr,money2,false,"Total AI cost ÷ hours saved"]];
+  $("#bvt").innerHTML=`<thead><tr><th>Measure</th><th class="r">Actual</th><th class="r">Plan</th><th>Actual vs. plan</th><th class="r"></th></tr></thead><tbody>${rows.map(([l,a,pl,f,up,note])=>{
+    const ratio=pl>0?a/pl:0;const good=up?ratio>=1:ratio<=1;const near=up?ratio>=.8:ratio<=1.2;
+    const cls=good?"p-ok":near?"p-mid":"p-bad";const w=Math.max(0,Math.min(1.25,ratio))/1.25*100;
+    const lab=up?`${Math.round(ratio*100)}% of plan`:ratio<=1?(Math.abs(ratio-1)<.005?"On plan":`${Math.round((1-ratio)*100)}% under plan`):`${Math.round((ratio-1)*100)}% over plan`;
+    return `<tr><td><b>${l}</b>${note?`<small>${note}</small>`:""}</td><td class="r num big">${f(a)}</td><td class="r num">${f(pl)}</td>
+      <td><div class="track" style="margin-top:4px"><i style="width:${w}%;background:${good?"var(--green-pill)":near?"var(--yellow)":"var(--pink)"}"></i><em style="left:calc(80% - 1.5px)"></em></div></td>
+      <td class="r"><span class="pill ${cls}">${lab}</span></td></tr>`;}).join("")}</tbody>`;
+}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+function ksummary(){
+  const r=kcalc(),[vt]=kverdict(r);
+  return [`AI PERFORMANCE DASHBOARD — ${K.period||""}`,``,`Overall: ${vt}`,``,
+   `1. ADOPTION: ${pctf(r.adopt)} of eligible employees (target ${K.adoptT}%); ${nf(+K.wau||0)} weekly active; ${K.cases} documented use cases`,
+   `2. OPERATIONS: ${r.onTrack} of ${r.ops.length} measures on track or on target`,...r.ops.map(o=>`   - ${o.n}: ${o.b} → ${o.c} ${o.u} (target ${o.t}) — ${o.st[0]}`),
+   `3. VALUE: verified ROI ${pctf(r.vroi)} (incl. estimates ${pctf(r.froi)}); verified value ${fmt(r.ver)}, estimated ${fmt(r.est)}, total AI cost ${fmt(r.cost)}; cost per verified hour ${money2(r.cph)}`,
+   ``,`PORTFOLIO: ${r.both} of ${r.inits.length} initiatives show both operational and financial results`,...r.inits.map(i=>`   - ${i.n} (${i.o}): ${i.dec[0]}`)].join("\n");
+}
+function show(){
+  setTimeout(updateMail,0);
+  const h=location.hash.slice(1);const v=["dashboard","assumptions","roi"].includes(h)?"roi":"kpi";
+  document.querySelectorAll(".view").forEach(el=>el.classList.toggle("on",el.id==="v-"+v));
+  document.querySelectorAll("[data-nav]").forEach(n=>{n.classList.toggle("on",n.dataset.nav===v);if(n.dataset.nav===v)n.setAttribute("aria-current","page");else n.removeAttribute("aria-current");});
+  if(v==="roi")renderDash();else renderKDash();
+  window.scrollTo(0,0);
+}
+function summary(){
+  const e=model(S),[vt]=verdict(e);
+  return [`ESTIMATED AI ROI${PRESETS[preset]?" — "+PRESETS[preset].label:""}`,``,`The call: ${vt}`,``,
+   `1. Annual AI capacity value: ${S.emp} × ${S.hrs} × ${S.weeks} × $${S.rate} = ${fmt(e.capacity)}`,
+   `2. Estimated financial benefit: ${fmt(e.capacity)} × ${S.real}% = ${fmt(e.benefit)}`,
+   `3. Net first-year benefit: ${fmt(e.benefit)} − ${fmt(e.cost1)} = ${fmt(e.net1)}`,
+   `4. First-year ROI: ${fmt(e.net1)} ÷ ${fmt(e.cost1)} = ${Math.round(e.roi*100)}%`,
+   `5. Payback: ${fmt(e.upfront)} ÷ ((${fmt(e.benefit)} − ${fmt(e.opex)}) ÷ 12) = ${e.payback===null?"never":e.payback.toFixed(2)+" months"}`,
+   `AI cost per hour saved: ${money2(e.costPerHr)}`].join("\n");
+}
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");setTimeout(()=>el.classList.remove("on"),1800);}
+function inKPI(){const h=location.hash.slice(1);return !["dashboard","assumptions","roi"].includes(h);}
+
+/* ---------- exports ---------- */
+const LIBS={h2c:"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",pdf:"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",pptx:"https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"};
+const loaded={};
+function loadLib(k){return loaded[k]||(loaded[k]=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src=LIBS[k];sc.onload=res;sc.onerror=()=>{delete loaded[k];rej(new Error("load"))};document.head.appendChild(sc);}));}
+const DL={save:({filename,data})=>new Promise(res=>{const blob=data instanceof Blob?data:new Blob([data]);const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);res({status:"saved"});})};
+async function snap(sel){
+  await loadLib("h2c");
+  const el=document.querySelector(sel);
+  document.body.classList.add("capturing");
+  try{return await html2canvas(el,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false});}
+  finally{document.body.classList.remove("capturing");}
+}
+function fileBase(scope){return scope==="kpi"?"AI-Performance-Dashboard":"AI-ROI-Calculator";}
+function titleOf(scope){if(scope==="kpi")return "AI Performance Dashboard"+(K.period?" · "+K.period:"");const [vt]=verdict(model(S));return "AI ROI Calculator · "+vt;}
+const CREDIT="Designed by Weiwei Hu · © 2026 Weiwei Hu. All rights reserved.";
+function fit(cw,ch,bw,bh){const r=Math.min(bw/cw,bh/ch);return {w:cw*r,h:ch*r};}
+async function exportPDF(scope,auto){
+  const canvas=await snap(scope==="kpi"?"#v-kpi .dash":"#v-roi");await loadLib("pdf");
+  const {jsPDF}=window.jspdf;const land=canvas.width>canvas.height*1.05;const doc=new jsPDF({orientation:land?"landscape":"portrait",unit:"pt",format:"letter"});
+  const W=land?792:612,H=land?612:792,m=32;
+  doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text(titleOf(scope),m,m+14);
+  const box={x:m,y:m+30,w:W-2*m,h:H-2*m-30-22};const f=fit(canvas.width,canvas.height,box.w,box.h);
+  doc.addImage(canvas.toDataURL("image/jpeg",0.92),"JPEG",m+(box.w-f.w)/2,box.y,f.w,f.h);
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(110);doc.text(CREDIT,m,H-m+6);
+  if(auto)doc.autoPrint();
+  return doc.output("blob");
+}
+async function exportPPTX(scope){
+  const canvas=await snap(scope==="kpi"?"#v-kpi .dash":"#v-roi .dash");await loadLib("pptx");
+  const pptx=new PptxGenJS();pptx.layout="LAYOUT_WIDE";pptx.author="Weiwei Hu";
+  const sl=pptx.addSlide();sl.background={color:"FFFFFF"};
+  sl.addText(titleOf(scope),{x:0.4,y:0.2,w:12.5,h:0.55,fontFace:"Arial",fontSize:22,bold:true,color:"151515"});
+  const f=fit(canvas.width,canvas.height,12.53,5.95);
+  sl.addImage({data:canvas.toDataURL("image/png"),x:(13.33-f.w)/2,y:0.85,w:f.w,h:f.h});
+  sl.addText(CREDIT,{x:0.4,y:7.05,w:12.5,h:0.3,fontFace:"Arial",fontSize:9,color:"666662"});
+  return await pptx.write({outputType:"blob"});
+}
+async function runExport(btn){
+  if(!DL){toast("Downloads aren't available in this view");return;}
+  const kind=btn.dataset.export,scope=btn.dataset.scope,label=btn.textContent;
+  btn.disabled=true;btn.textContent="Preparing…";
+  try{
+    const blob=await exportPDF(scope);
+    await DL.save({filename:`${fileBase(scope)}${kind==="print"?"-print":""}.pdf`,data:blob});toast("PDF downloaded");
+  }catch(err){const c=err&&err.code;toast(c==="declined"?"Download cancelled":c==="rate_limited"?"Please wait a moment and try again":err&&err.message==="load"?"Couldn't load the export tool. Check your connection and try again":"Export isn't available here");}
+  finally{btn.disabled=false;btn.textContent=label;}
+}
+async function doPrint(scope){
+  let opened=false;const mark=()=>{opened=true;};
+  window.addEventListener("beforeprint",mark,{once:true});
+  try{window.print();}catch(e){}
+  window.removeEventListener("beforeprint",mark);
+  if(opened)return;
+  if(!DL){toast("Printing is blocked in this view. Open the page in its own tab and press Ctrl+P or Cmd+P.");return;}
+  try{const blob=await exportPDF(scope,true);await DL.save({filename:`${fileBase(scope)}-print.pdf`,data:blob});toast("This viewer blocks the print window, so a print-ready PDF was saved. Opening it starts printing.");}
+  catch(err){const c=err&&err.code;toast(c==="declined"?"Print cancelled":"Printing isn't available in this view");}
+}
+function updateMail(){
+  const a=document.getElementById("mail-kpi"),b=document.getElementById("mail-roi");
+  if(a)a.href="mailto:?subject="+encodeURIComponent("AI Performance Dashboard"+(K.period?" — "+K.period:""))+"&body="+encodeURIComponent(ksummary()+"\n\nDesigned by Weiwei Hu");
+  if(b)b.href="mailto:?subject="+encodeURIComponent("AI ROI Calculator")+"&body="+encodeURIComponent(summary()+"\n\nDesigned by Weiwei Hu");
+}
+function copy(){const t=inKPI()?ksummary():summary();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("Summary copied")).catch(()=>toast("Your browser blocked copying"));}
+function reset(){if(inKPI()){toast("The performance dashboard shows sample figures");return;}preset="article";S={...PRESETS.article.v};save();renderPresets();renderForm();show();toast("Example restored");}
+document.addEventListener("input",ev=>{const t=ev.target;
+  if(t.dataset.k){K[t.dataset.k]=t.value;ksave();renderKLive();return;}
+  if(t.dataset.op){const [i,f]=t.dataset.op.split(":");K.ops[+i][f]=t.value;ksave();renderKLive();return;}
+  if(t.dataset.pi){const [i,f]=t.dataset.pi.split(":");K.inits[+i][f]=t.value;ksave();renderKLive();return;}
+if(t.dataset.in){S[t.dataset.in]=t.value;if(preset!=="custom"){preset="custom";renderPresets();}save();renderDash();}});
+document.addEventListener("click",ev=>{
+  const ml=ev.target.closest("a[id^=mail-]");if(ml){updateMail();try{navigator.clipboard.writeText(ml.id==="mail-kpi"?ksummary():summary()).then(()=>toast("Opening your email app · summary also copied, paste it if needed")).catch(()=>{});}catch(e){}return;}
+  const b=ev.target.closest("button");if(!b)return;
+  if(b.dataset.preset&&PRESETS[b.dataset.preset]){preset=b.dataset.preset;S={...PRESETS[preset].v};save();renderPresets();renderForm();renderDash();return;}
+  if(b.dataset.pt){const [i,f]=b.dataset.pt.split(":");K.inits[+i][f]=!K.inits[+i][f];ksave();renderKInits();renderKLive();return;}
+  if(b.dataset.prm){K.inits.splice(+b.dataset.prm,1);ksave();renderKInits();renderKLive();return;}
+  if(b.id==="addinit"){K.inits.push({n:"New initiative",o:"Owner",ops:false,fin:false});ksave();renderKInits();renderKLive();return;}
+  if(b.dataset.print){doPrint(b.dataset.print);return;}
+  if(b.dataset.export){runExport(b);return;}
+  if(["copy-side","copy-asst","kcopy-asst"].includes(b.id)){copy();return;}
+  if(b.id==="reset-side"){reset();return;}
+});
+window.addEventListener("hashchange",show);
+renderPresets();renderForm();show();
+</script>
+</body>
+</html>
