@@ -8,7 +8,7 @@ AI adoption and usage → AI operational performance → AI business value.
 - **AI Performance Dashboard** shows actual results against plan: adoption, operational KPIs (speed, efficiency, quality, decisions) and verified versus estimated business value.
 - **AI ROI Calculator** estimates first-year value before you invest: annual capacity value, financial benefit, net benefit, ROI, payback and AI cost per hour saved.
 
-**Note:** The AI Performance Dashboard is a mockup using illustrative data to demonstrate how AI performance can be tracked against plan. It does not display actual organizational results.
+**Note:** The AI Performance Dashboard is a mockup using illustrative data to demonstrate how AI performance can be tracked against plan. It does not capture any actual performance results.
 
 ![AI Performance and ROI: dashboard and calculator](images/AI-Performance-ROI-cover.png)
 
