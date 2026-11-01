@@ -831,14 +831,17 @@ async function runExport(btn){
   finally{btn.disabled=false;btn.textContent=label;}
 }
 async function doPrint(scope){
-  let opened=false;const mark=()=>{opened=true;};
-  window.addEventListener("beforeprint",mark,{once:true});
-  try{window.print();}catch(e){}
-  window.removeEventListener("beforeprint",mark);
-  if(opened)return;
-  if(!DL){toast("Printing is blocked in this view. Open the page in its own tab and press Ctrl+P or Cmd+P.");return;}
-  try{const blob=await exportPDF(scope,true);await DL.save({filename:`${fileBase(scope)}-print.pdf`,data:blob});toast("This viewer blocks the print window, so a print-ready PDF was saved. Opening it starts printing.");}
-  catch(err){const c=err&&err.code;toast(c==="declined"?"Print cancelled":"Printing isn't available in this view");}
+  // Both Print and PDF use the same single-page, fitted PDF layout.
+  // Avoid window.print() on the long dashboard, which can create multiple pages.
+  if(!DL){toast("Downloads aren't available in this view");return;}
+  try{
+    const blob=await exportPDF(scope,true);
+    await DL.save({filename:`${fileBase(scope)}-print.pdf`,data:blob});
+    toast("One-page print-ready PDF saved. Open it to print.");
+  }catch(err){
+    const c=err&&err.code;
+    toast(c==="declined"?"Print cancelled":"Couldn't prepare the one-page print PDF");
+  }
 }
 function updateMail(){
   const a=document.getElementById("mail-kpi"),b=document.getElementById("mail-roi");
