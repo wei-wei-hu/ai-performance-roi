@@ -12,7 +12,7 @@ AI adoption and usage → AI operational performance → AI business value.
 
 ![AI ROI Calculator](images/AI-ROI-Calculator.png)
 
-## How the ROI is calculated
+## How AI ROI is calculated
 
 1. Annual AI capacity value = employees × hours saved per week × working weeks × labor cost
 2. Financial benefit = capacity value × value realization rate
