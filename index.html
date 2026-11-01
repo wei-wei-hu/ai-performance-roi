@@ -51,7 +51,7 @@ button,input{font:inherit;color:inherit}
 
 .shell{max-width:1360px;margin:24px auto;padding:0 16px}
 .frame{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;background:var(--frame);border:1.5px solid #3a3631;border-radius:22px;padding:14px;min-height:calc(100vh - 48px)}
-@media (max-width:900px){.frame{grid-template-columns:1fr}}
+@media screen and (max-width:900px){.frame{grid-template-columns:1fr}}
 
 /* sidebar */
 .side{background:#121212;color:#e9e4da;border-radius:16px;padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:14px;align-self:start;height:calc(100vh - 76px);min-height:520px}
@@ -70,7 +70,7 @@ button,input{font:inherit;color:inherit}
 .pagetoggle a{text-align:center;color:#cfc8bb;text-decoration:none;font-size:13px;font-weight:700;padding:8px 16px;border-radius:999px;white-space:nowrap}
 .pagetoggle a.on{background:#fff;color:var(--ink)}
 .pagetoggle a:not(.on):hover{color:#fff}
-@media (max-width:640px){.pagetoggle{margin-right:0;width:100%}.pagetoggle a{flex:1;text-align:center;padding:8px 8px}}
+@media screen and (max-width:640px){.pagetoggle{margin-right:0;width:100%}.pagetoggle a{flex:1;text-align:center;padding:8px 8px}}
 .mb-brand b{font-size:18px;font-weight:800;letter-spacing:-.02em}
 .mb-brand span{font-size:12.5px;color:var(--muted)}
 .links{display:flex;gap:8px;flex-wrap:wrap}
@@ -83,21 +83,20 @@ button,input{font:inherit;color:inherit}
 .exports .lpill{background:none;cursor:pointer;font-family:inherit}
 .exports .lpill[disabled]{opacity:.5;cursor:wait}
 .exports .dl.hidden{display:none}
-@media print{.mainbar,.exports,.legal p:not(:first-child),.toast{display:none!important}.subhead .search{display:none}.frame{border:0;padding:0}body{background:#fff}}
 body.capturing .k .dot,body.capturing .exports,body.capturing .mainbar,body.capturing .legal{visibility:hidden}
 .side .sect:first-of-type{padding-top:4px}
 .brand{padding-bottom:4px!important;font-size:24px!important}
 .byline{margin:0 6px 14px;font-size:12px;color:#a8a196}
 .byline a{color:var(--pink);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .byline a:hover{color:#fff}
-@media (max-width:900px){.byline{margin:0 10px 0 0}}
+@media screen and (max-width:900px){.byline{margin:0 10px 0 0}}
 .credit{display:grid;gap:2px;margin:4px 0 0;padding:12px;border-radius:12px;background:#1f1f1f;color:#cfc8bb;text-decoration:none;font-size:11.5px;line-height:1.35}
 .credit b{color:#fff;font-size:13.5px;font-weight:700}
 .credit span{color:var(--pink);font-weight:700;font-size:11.5px}
 .credit:hover{background:#2a2a2a}
-@media (max-width:900px){.credit{margin:0 0 0 auto;padding:7px 12px;display:flex;gap:6px;align-items:center}}
+@media screen and (max-width:900px){.credit{margin:0 0 0 auto;padding:7px 12px;display:flex;gap:6px;align-items:center}}
 .side .foot{font-size:11px;color:#8e877b;padding:8px;line-height:1.45}
-@media (max-width:900px){
+@media screen and (max-width:900px){
   .side{position:static;height:auto;min-height:0;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
   .brand{padding:0 10px 0 4px}.side .sect,.side .grow,.side .foot{display:none}
   .nav{width:auto;padding:7px 10px}.nav.on::before{display:none}
@@ -125,7 +124,7 @@ main{display:grid;gap:22px;padding:6px 6px 24px;min-width:0}
 
 /* overview */
 .overview{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);gap:22px}
-@media (max-width:1100px){.overview{grid-template-columns:1fr}}
+@media screen and (max-width:1100px){.overview{grid-template-columns:1fr}}
 .ringcard{display:grid;gap:12px;align-content:start}
 .ringwrap{position:relative;width:100%;max-width:300px;margin:0 auto;aspect-ratio:1}
 .ringwrap svg{width:100%;height:100%;display:block}
@@ -151,7 +150,7 @@ main{display:grid;gap:22px;padding:6px 6px 24px;min-width:0}
 
 .right{display:grid;gap:18px;align-content:start}
 .duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px}
-@media (max-width:760px){.duo{grid-template-columns:1fr}}
+@media screen and (max-width:760px){.duo{grid-template-columns:1fr}}
 .assistant{background:var(--ink);color:#fff;border-radius:18px;padding:18px;display:grid;gap:10px;align-content:start;position:relative}
 .assistant .t{font-size:13px;font-weight:600;text-align:center;color:#e9e4da}
 .bubble{background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.45}
@@ -215,7 +214,7 @@ td b{font-weight:700}
 .levers{background:var(--tile);border-radius:16px;padding:8px 16px}
 .lever{display:grid;grid-template-columns:34px minmax(150px,1.2fr) minmax(120px,1fr) 104px 32px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
 .lever:first-child{border-top:0}
-@media (max-width:700px){.lever{grid-template-columns:34px 1fr 32px}.lever .bar,.lever .val{grid-column:2}}
+@media screen and (max-width:700px){.lever{grid-template-columns:34px 1fr 32px}.lever .bar,.lever .val{grid-column:2}}
 .lever .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
 .lever .ic svg{width:16px;height:16px;stroke:var(--ink)}
 .lever .t{font-weight:700;font-size:13px}
@@ -261,12 +260,12 @@ main{align-content:start}
 
 .dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
 .c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}.c3{grid-column:span 3}
-@media (max-width:1100px){.c3{grid-column:span 6}.c4,.c5,.c7,.c8{grid-column:span 12}}
-@media (max-width:620px){.c3,.c6{grid-column:span 12}}
+@media screen and (max-width:1100px){.c3{grid-column:span 6}.c4,.c5,.c7,.c8{grid-column:span 12}}
+@media screen and (max-width:620px){.c3,.c6{grid-column:span 12}}
 .dash .stat{min-height:118px;align-content:space-between}
 .dash .stat .v{font-size:30px}
 .ringpanel{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,1fr);gap:16px;align-items:center}
-@media (max-width:560px){.ringpanel{grid-template-columns:1fr}}
+@media screen and (max-width:560px){.ringpanel{grid-template-columns:1fr}}
 .rl{display:grid;gap:10px}
 .rl .it{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;font-size:13px}
 .rl .it i{width:12px;height:12px;border-radius:50%}
@@ -280,7 +279,7 @@ main{align-content:start}
 .assistant.wide .bubble.big{font-size:24px}
 /* AI success measurement */
 .ladder{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr);gap:8px;align-items:stretch}
-@media (max-width:760px){.ladder{grid-template-columns:1fr}.ladder .arrow{display:none}}
+@media screen and (max-width:760px){.ladder{grid-template-columns:1fr}.ladder .arrow{display:none}}
 .ladder .arrow{display:grid;place-items:center;color:var(--muted);font-weight:800}
 .lvl{border-radius:14px;padding:14px;display:grid;gap:6px;align-content:start;min-height:150px}
 .lvl .l{padding-right:22px}
@@ -296,7 +295,7 @@ main{align-content:start}
 .pill{justify-self:start;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;white-space:nowrap}
 .p-ok{background:var(--green-pill)}.p-mid{background:var(--yellow)}.p-bad{background:var(--pink)}.p-info{background:var(--blue)}.p-dark{background:var(--ink);color:#fff}
 .adopt{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center}
-@media (max-width:480px){.adopt{grid-template-columns:1fr}}
+@media screen and (max-width:480px){.adopt{grid-template-columns:1fr}}
 .adopt .ringwrap{max-width:150px}
 .astats{display:grid;gap:10px}
 .astat{display:grid;gap:4px}
@@ -313,14 +312,14 @@ main{align-content:start}
 .astat small{font-size:11px;color:var(--muted)}
 .oprow{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(120px,1fr) 64px 92px;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
 .oprow:first-of-type{border-top:0}
-@media (max-width:640px){.oprow{grid-template-columns:1fr auto}.oprow .track{grid-column:1/-1}}
+@media screen and (max-width:640px){.oprow{grid-template-columns:1fr auto}.oprow .track{grid-column:1/-1}}
 .oprow .n{font-weight:700;font-size:13px}
 .oprow .n small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
 .oprow .chg{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;font-size:13px}
 .oprow .pill{justify-self:end}
 .dimtag{display:inline-block;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;margin-right:6px;vertical-align:1px}
 .vrow{display:grid;grid-template-columns:150px minmax(0,1fr) 88px;gap:12px;align-items:center;padding:9px 0}
-@media (max-width:560px){.vrow{grid-template-columns:1fr auto}.vrow .vb{grid-column:1/-1}}
+@media screen and (max-width:560px){.vrow{grid-template-columns:1fr auto}.vrow .vb{grid-column:1/-1}}
 .vrow .n{font-size:13px;font-weight:700}
 .vrow .n small{display:block;font-weight:500;color:var(--muted);font-size:11px}
 .vb{display:flex;height:22px;gap:3px}
@@ -371,10 +370,10 @@ main{align-content:start}
 .verdict-pill{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:999px;padding:6px 14px 6px 10px;font-size:13.5px;font-weight:800}
 .verdict-pill i{width:11px;height:11px;border-radius:50%;display:block}
 .verdict-pill span{font-weight:500;color:#cfc8bb;font-size:12.5px;max-width:60ch}
-@media (max-width:900px){.verdict-pill span{display:none}#dbsub{white-space:normal!important}}
+@media screen and (max-width:900px){.verdict-pill span{display:none}#dbsub{white-space:normal!important}}
 .minirow{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media (max-width:1100px){.minirow{grid-template-columns:1fr 1fr}}
-@media (max-width:560px){.minirow{grid-template-columns:1fr}}
+@media screen and (max-width:1100px){.minirow{grid-template-columns:1fr 1fr}}
+@media screen and (max-width:560px){.minirow{grid-template-columns:1fr}}
 #v-roi .ringpanel{grid-template-columns:minmax(140px,170px) minmax(0,1fr)}
 #v-roi .stat .c{display:none}
 #v-roi .rl .it small{display:none}
@@ -388,6 +387,19 @@ main{align-content:start}
 .bvt .r{text-align:right}.bvt .big{font-size:17px;font-weight:700}
 .bvt td:nth-child(4){width:30%}
 .bvt .pill{justify-self:end}
+
+/* print: desktop layout, one landscape page */
+body.printing .shell{width:1340px!important;max-width:none!important;margin:0!important;padding:0!important}
+body.printing .frame{border:0!important;padding:0!important;min-height:0!important;border-radius:0!important}
+body.printing .mainbar,body.printing .exports,body.printing .toast,body.printing .legal p:not(:first-child),body.printing .fine-list{display:none!important}
+@media print{
+  @page{size:landscape;margin:0.3in}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{background:#fff!important}
+  .shell{width:1340px!important;max-width:none!important;margin:0!important;padding:0!important}
+  .frame{border:0!important;padding:0!important;min-height:0!important}
+  .mainbar,.exports,.toast,.legal p:not(:first-child),.fine-list{display:none!important}
+}
 .spark text{font-family:var(--font);font-size:10px;fill:var(--muted)}
 </style>
 </head>
@@ -458,7 +470,7 @@ main{align-content:start}
     <!-- ROI CALCULATOR -->
     <section class="view" id="v-roi" aria-labelledby="h-db">
       <div class="hero">
-        <div><h1 id="h-db">AI ROI Calculator</h1><p id="dbsub" style="max-width:none">Is this AI investment worth funding? Change the assumptions to see updated results. · Mockup with randomized illustrative data.</p></div>
+        <div><h1 id="h-db">AI ROI Calculator</h1><p id="dbsub" style="max-width:none;white-space:nowrap">Is this AI investment worth funding? Change the assumptions to see updated results.</p></div>
       </div>
       <div class="subhead"><h2>Key assumptions</h2></div>
       <div class="form" id="form"></div>
@@ -717,7 +729,7 @@ function renderKDash(){
   const P=model(S),planEmp=Math.max(0,+S.emp||0);
   K.adoptT=Math.round(Math.min(1,planEmp/Math.max(1,+K.elig||0))*100);K.roiT=Math.round(P.roi*100);
   const r=kcalc(),[vt,vcol]=kverdict(r),n=k=>Math.max(0,+K[k]||0);
-  $("#kdsub").textContent=`${K.period||"Current period"} · actuals against the plan in the AI ROI Calculator · Mockup with randomized illustrative data.`;
+  $("#kdsub").textContent=`${K.period||"Current period"} · actuals against the plan in the AI ROI Calculator.`;
   const ofT=(a,t)=>t>0?a/t:0;
   const pTag=x=>{const pc=Math.round(x*100),c=x>=1?"p-ok":x>=.8?"p-mid":"p-bad";return `<span class="pill ${c}">${pc}% of target</span>`;};
   const opsProg=r.ops.reduce((t,o)=>t+Math.min(1,o.prog),0)/Math.max(1,r.ops.length);
@@ -830,36 +842,20 @@ async function runExport(btn){
   }catch(err){const c=err&&err.code;toast(c==="declined"?"Download cancelled":c==="rate_limited"?"Please wait a moment and try again":err&&err.message==="load"?"Couldn't load the export tool. Check your connection and try again":"Export isn't available here");}
   finally{btn.disabled=false;btn.textContent=label;}
 }
-async function doPrint(scope){
-  // Open a one-page on-screen preview; only the user's second click opens the native print dialog.
-  const preview=window.open("","_blank");
-  if(!preview){toast("Please allow pop-ups for the print preview.");return;}
-  preview.document.write('<!doctype html><html><head><title>Preparing print preview</title></head><body style="font:14px Arial,sans-serif;padding:24px">Preparing one-page print preview…</body></html>');
-  preview.document.close();
-  try{
-    const canvas=await snap(scope==="kpi"?"#v-kpi .dash":"#v-roi");
-    const img=canvas.toDataURL("image/png");
-    const heading=scope==="kpi"?"AI Performance Dashboard":"AI ROI Calculator";
-    preview.document.open();
-    preview.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${heading} — Print Preview</title>
-<style>
-@page{size:letter landscape;margin:0.3in}
-*{box-sizing:border-box}
-html,body{margin:0;background:#eee;color:#151515;font-family:Arial,sans-serif}
-.toolbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;z-index:2}
-.toolbar button{background:#151515;color:#fff;border:0;border-radius:20px;padding:10px 22px;font:600 14px Arial;cursor:pointer}
-.sheet{width:10.4in;height:7.9in;margin:20px auto;background:white;padding:0.1in;display:flex;flex-direction:column;align-items:center;overflow:hidden;box-shadow:0 2px 16px #bbb;break-inside:avoid;page-break-inside:avoid}
-h1{font-size:17px;margin:0 0 8px;align-self:flex-start}
-.sheet img{display:block;max-width:100%;max-height:6.9in;width:auto;height:auto;object-fit:contain}
-footer{margin-top:auto;align-self:flex-start;font-size:9px;color:#666}
-@media print{html,body{background:white;width:100%;height:100%;overflow:hidden}.toolbar{display:none!important}.sheet{width:100%;height:7.9in;margin:0;padding:0;box-shadow:none}}
-</style></head><body><div class="toolbar"><span>One-page print preview · Letter landscape</span><button type="button" onclick="window.print()">Print…</button></div>
-<div class="sheet"><h1>${heading}</h1><img alt="${heading}" src="${img}"><footer>Designed by Weiwei Hu · © 2026 Weiwei Hu. All rights reserved.</footer></div></body></html>`);
-    preview.document.close();
-  }catch(err){
-    preview.document.body.textContent="Couldn't prepare print preview. Please try again.";
-    toast("Couldn't prepare print preview");
-  }
+function preparePrint(){
+  const sh=document.querySelector(".shell");document.body.classList.add("printing");sh.style.zoom="";
+  const w=sh.scrollWidth,h=sh.scrollHeight;sh.style.zoom=Math.min(998/w,736/h,1).toFixed(3);
+}
+function cleanupPrint(){document.body.classList.remove("printing");const sh=document.querySelector(".shell");if(sh)sh.style.zoom="";}
+window.addEventListener("beforeprint",()=>{if(!document.body.classList.contains("printing"))preparePrint();});
+window.addEventListener("afterprint",cleanupPrint);
+function doPrint(scope){
+  let opened=false;const mark=()=>{opened=true;};
+  window.addEventListener("beforeprint",mark,{once:true});
+  preparePrint();
+  try{window.print();}catch(e){}
+  window.removeEventListener("beforeprint",mark);
+  if(!opened){cleanupPrint();toast("Your browser blocked printing. Press Ctrl+P or Cmd+P instead.");}
 }
 function updateMail(){
   const a=document.getElementById("mail-kpi"),b=document.getElementById("mail-roi");
